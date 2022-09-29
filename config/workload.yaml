@@ -6,6 +6,16 @@ metadata:
     apps.tanzu.vmware.com/workload-type: web
     app.kubernetes.io/part-of: sample-app
 spec:
+  params:
+  - name: annotations
+    value:
+      autoscaling.knative.dev/minScale: "1"
+  serviceClaims:
+    - name: rmq
+      ref:
+        apiVersion: rabbitmq.com
+        kind: RabbitmqCluster
+        name: hello-world
   source:
     git:
       url: https://github.com/Samze/csharp-weatherforecast

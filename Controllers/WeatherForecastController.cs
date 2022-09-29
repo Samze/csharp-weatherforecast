@@ -3,6 +3,7 @@ using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using System.Text;
 using Newtonsoft.Json;
+using KubeServiceBinding;
 
 namespace Sample.Controllers;
 
@@ -26,6 +27,11 @@ public class WeatherForecastController : ControllerBase
     public WeatherForecast Get()
     {
         //Parse RMQ configuration
+        // Get service binding information
+        Dictionary<string, string> bindingsKVP = GetDotnetServiceBindings();
+
+        Console.WriteLine("binding",bindingsKVP);
+
         string host = Environment.GetEnvironmentVariable("RMQ_HOST");
         string port = Environment.GetEnvironmentVariable("RMQ_PORT");
         string user = Environment.GetEnvironmentVariable("RMQ_USER");
