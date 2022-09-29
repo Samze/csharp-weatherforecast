@@ -19,14 +19,21 @@ public class WeatherForecastController : ControllerBase
     }
 
     [HttpGet]
-    public IEnumerable<WeatherForecast> Get()
+    public IEnumerable<String> Get()
     {
-        return Enumerable.Range(1, 5).Select(index => new WeatherForecast
-            {
-                Date = DateTime.Now.AddDays(index),
-                TemperatureC = Random.Shared.Next(-20, 55),
-                Summary = Summaries[Random.Shared.Next(Summaries.Length)]
-            })
-            .ToArray();
+
+      // Check whether the environment variable exists.
+        string host = Environment.GetEnvironmentVariable("RMQ_HOST");
+        string port = Environment.GetEnvironmentVariable("RMQ_PORT");
+        string user = Environment.GetEnvironmentVariable("RMQ_USER");
+        string password = Environment.GetEnvironmentVariable("RMQ_PASSWORD");
+        return new string[]{host, port, user, password};
+        // return Enumerable.Range(1, 5).Select(index => new WeatherForecast
+        //     {
+        //         Date = DateTime.Now.AddDays(index),
+        //         TemperatureC = Random.Shared.Next(-20, 55),
+        //         Summary = Summaries[Random.Shared.Next(Summaries.Length)]
+        //     })
+        //     .ToArray();
     }
 }

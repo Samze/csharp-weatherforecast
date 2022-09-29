@@ -8,6 +8,24 @@ metadata:
 spec:
   source:
     git:
-      url: https://github.com/sample-accelerators/csharp-weatherforecast
+      url: https://github.com/Samze/csharp-weatherforecast
       ref:
         branch: main
+  env:
+  - name: RMQ_PORT
+    value: "5672"
+  - name: RMQ_HOST
+    valueFrom:
+      secretKeyRef:
+        name: hello-world-default-user
+        key: host
+  - name: RMQ_USER
+    valueFrom:
+      secretKeyRef:
+        name: hello-world-default-user
+        key: username
+  - name: RMQ_PASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: hello-world-default-user
+        key: password
