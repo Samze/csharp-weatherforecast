@@ -27,15 +27,17 @@ public class WeatherForecastController : ControllerBase
     public WeatherForecast Get()
     {
         //Parse RMQ configuration
-        // Get service binding information
-        Dictionary<string, string> bindingsKVP = GetDotnetServiceBindings();
+        DotnetServiceBinding sc = new DotnetServiceBinding();
+        Dictionary<string, string> rmqBinding = sc.GetBindings("rabbitmq");
 
-        Console.WriteLine("binding",bindingsKVP);
+        string host = rmqBinding["host"];
+        string port = rmqBinding["port"];
+        string user = rmqBinding["username"];
+        string password = rmqBinding["password"];
 
-        string host = Environment.GetEnvironmentVariable("RMQ_HOST");
-        string port = Environment.GetEnvironmentVariable("RMQ_PORT");
-        string user = Environment.GetEnvironmentVariable("RMQ_USER");
-        string password = Environment.GetEnvironmentVariable("RMQ_PASSWORD");
+        Console.WriteLine("host {0}", host);
+        Console.WriteLine("port {0}", port);
+        Console.WriteLine("user {0}", user);
 
         //Setup RMQ client
         ConnectionFactory factory = new ConnectionFactory();

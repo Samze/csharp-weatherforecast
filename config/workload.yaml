@@ -8,34 +8,16 @@ metadata:
 spec:
   params:
   - name: annotations
-    value:
+    value: |
       autoscaling.knative.dev/minScale: "1"
-  serviceClaims:
-    - name: rmq
-      ref:
-        apiVersion: rabbitmq.com
-        kind: RabbitmqCluster
-        name: hello-world
   source:
     git:
       url: https://github.com/Samze/csharp-weatherforecast
       ref:
-        branch: binding
-  env:
-  - name: RMQ_PORT
-    value: "5672"
-  - name: RMQ_HOST
-    valueFrom:
-      secretKeyRef:
-        name: hello-world-default-user
-        key: host
-  - name: RMQ_USER
-    valueFrom:
-      secretKeyRef:
-        name: hello-world-default-user
-        key: username
-  - name: RMQ_PASSWORD
-    valueFrom:
-      secretKeyRef:
-        name: hello-world-default-user
-        key: password
+        branch: binding_v2
+  serviceClaims:
+    - name: rmq
+      ref:
+        apiVersion: rabbitmq.com/v1beta1
+        kind: RabbitmqCluster
+        name: hello-world
