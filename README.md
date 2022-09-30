@@ -1,42 +1,113 @@
 # C# Sample Accelerator
 
-A sample accelerator for C#.
+A sample accelerator for C# consuming Services (Rabbitmq and Reddis).
 
-This sample is the Weather Forecast RESTful API application made available from Microsoft.
+It simply does the following:
+* Generates some weather data
+* Sends the data to a RMQ Queue
+* Receives back the same data from RMQ
+* Stashes the data in Redis
 
-The starting source for this sample was created using:
-```
-$ dotnet new webapi --framework net6.0 --language C#
-```
+This application has two versions on different branches:
+- Application that consumes Services via environment variables - See [rmq_redis_env_vars](https://github.com/Samze/csharp-weatherforecast/tree/rmq_redis_env_vars)
+- Application that consumes Services via [Service Binding specification](https://github.com/servicebinding/spec) - See [rmq_redis](https://github.com/Samze/csharp-weatherforecast/tree/rmq_redis)
+
+This sample is a modified version of the Weather Forecast RESTful API application made available from Microsoft.
 
 ## Running the app locally
 
 To run the sample application:
 
-```
-$ dotnet run
+```console
+dotnet run
 ```
 
-## Deploying to Kubernetes as a TAP workload with Tanzu CLI
+## Deploying to Kubernetes as a TAP workload
+
+### Install Service Operators
+1. Create a Services namespace
+```console
+kubectl create ns service-instances
+```
+
+1. Install the Redis Enterprise operator
+```console
+ kapp -y deploy --app redis-operator --file https://raw.githubusercontent.com/RedisLabs/redis-enterprise-k8s-docs/v6.2.10-45/bundle.yaml -n service-instances
+```
+
+1. Install the RabbitMQ cluster Operator
+```console
+ kapp -y deploy --app rmq-operator --file https://github.com/rabbitmq/cluster-operator/releases/latest/download/cluster-operator.yml -n service-instances
+ ```
+
+### Create Service instances
+
+1. Create a Redis instance
+```console
+kubectl apply -f config/redis.yaml
+ ```
+
+1. Create a RabbitMQ instance
+```console
+kubectl apply -f config/rabbitmq.yaml
+```
+
+### Create Application
+
+1. Create Service Metadata
+```console
+kubectl apply -f config/meta.yaml
+```
+
+#### Option 1: Using YAML
+1. Create ResourceClaims
+```console
+kubectl apply -f config/claims.yaml
+```
+
+1. Create workload
+```console
+kubectl apply -f config/workload.yaml
+```
+
+#### Option 2: Using Tanzu CLI
+1. Discover what service classes are available
+```console
+tanzu service class list
+```
+
+1. Discover what service instances are available in your namespace
+```console
+tanzu service claimable list --class rabbitmq-cluster
+tanzu service claimable list --class redis-enterprise-cluster
+```
+
+1. Create two ResourceClaims for each available Service
+```console
+tanzu service claim create rmq-1-claim \
+  --resource-name rmq-1 \
+  --resource-namespace service-instances \
+  --resource-kind RabbitmqCluster \
+  --resource-api-version rabbitmq.com/v1beta1
+```
+
+```console
+tanzu service claim create redis-1-claim \
+  --resource-name redis-1-redis-secret \
+  --resource-namespace service-instances \
+  --resource-kind Secret \
+  --resource-api-version v1
+```
+
+1. Create Workload
+**Note** Only currently possible through `yaml` definition as the env vars refer to Secrets.
+```console
+kubectl apply -f config/workload.yaml
+```
 
 > NOTE: The provided `config/workload.yaml` file uses the Git URL for this sample. When you want to modify the source, you must push the code to your own Git repository and then update the `spec.source.git` information in the `config/workload.yaml` file.
 
 If you make modifications to the source, push these changes to your own Git repository.
-
-When you are done developing your app, you can simply deploy it using:
-
-```
-tanzu apps workload apply -f config/workload.yaml
-```
-
-If you would like deploy the code from your local working directory you can use the following command:
-
-```
-tanzu apps workload create sample-app -f config/workload.yaml \
-  --local-path . \
-  --source-image <REPOSITORY-PREFIX>/sample-app-source \
-  --type web
-```
 
 ## Accessing the app deployed to your cluster
 
