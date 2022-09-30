@@ -52,6 +52,14 @@ kubectl apply -f config/redis.yaml
 kubectl apply -f config/rabbitmq.yaml
 ```
 
+1. Wait for both service instances to be ready
+```console
+kubectl wait --for=condition=ReconcileSuccess RabbitmqCluster rmq-1 -n service-instances
+
+kubectl wait --for=jsonpath='{.status.state}'=Running RedisEnterpriseCluster redis-1 -n service-instances
+kubectl wait --for=jsonpath='{.status.status}'=active RedisEnterpriseDatabase redis-1-db -n service-instances
+```
+
 ### Create Application
 
 1. Create Service Metadata
@@ -108,7 +116,8 @@ tanzu apps workload create sample-app \
   --label app.kubernetes.io/part-of=sample-app \
   --annotation autoscaling.knative.dev/minScale=1 \
   --service-ref="rmq=services.apps.tanzu.vmware.com/v1alpha1:ResourceClaim:rmq-1-claim" \
-  --service-ref="rmq=services.apps.tanzu.vmware.com/v1alpha1:ResourceClaim:redis-1-claim"
+  --service-ref="redis=services.apps.tanzu.vmware.com/v1alpha1:ResourceClaim:redis-1-claim" \
+  -y
 ```
 
 > NOTE: The provided `config/workload.yaml` file uses the Git URL for this sample. When you want to modify the source, you must push the code to your own Git repository and then update the `spec.source.git` information in the `config/workload.yaml` file.
