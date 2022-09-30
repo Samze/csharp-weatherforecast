@@ -27,38 +27,18 @@ public class WeatherForecastController : ControllerBase
     [HttpGet]
     public WeatherForecast Get()
     {
-        //Parse RMQ configuration
-        // DotnetServiceBinding sc = new DotnetServiceBinding();
-        // // Dictionary<string, string> rmqBinding = sc.GetBindings("rabbitmq");
 
-        // Dictionary<string, string> redisBinding = sc.GetBindings("redis");
-
-        // ConfigurationOptions config = new ConfigurationOptions
-        // {
-        //         EndPoints = { redisBinding["host"], redisBinding["port"] },
-        //         Password = redisBinding["password"]
-        // };
-
-        //Setup RMQ client
-        // ConnectionFactory factory = new ConnectionFactory();
-        // factory.HostName = rmqBinding["host"];
-        // factory.UserName = rmqBinding["username"];
-        // factory.Password = rmqBinding["password"];
-        // factory.Port = Int32.Parse(rmqBinding["port"]);
-
-        // IConnection conn = factory.CreateConnection();
-        
+        //Setup redis client
         var redisConn = RedisClient();
         IDatabase db = redisConn.GetDatabase();
 
+        //Setup rmq client
         IModel channel = RabbitmqClient();
-        channel.QueueDeclare(queue: "temperature",
+        channel.QueueDeclare(queue: "weather",
                                 durable: false,
                                 exclusive: false,
                                 autoDelete: false,
                                 arguments: null);
-
-
 
         //Generate Weather Data
         var weather = new WeatherForecast
@@ -68,31 +48,33 @@ public class WeatherForecastController : ControllerBase
                 Summary = Summaries[Random.Shared.Next(Summaries.Length)]
             };
 
-        //Send weather data
+        //Send weather data to RMQ
         var jsonWeather = JsonConvert.SerializeObject(weather);
     
         var body = Encoding.UTF8.GetBytes(jsonWeather);
 
         channel.BasicPublish(exchange: "",
-                            routingKey: "temperature",
+                            routingKey: "weather",
                             basicProperties: null,
                             body: body);
 
         Console.WriteLine(" [->] Sent {0}",jsonWeather);
 
 
-        //Receive weather data
-        var response = channel.BasicGet(queue: "temperature", autoAck: true);
+        //Receive weather data from RMQ
+        var response = channel.BasicGet(queue: "weather", autoAck: true);
 
         var recbody = response.Body.ToArray();
         var recmessage = Encoding.UTF8.GetString(recbody);
         Console.WriteLine(" [<-] Received {0}", recmessage);
 
-        var recweather = JsonConvert.DeserializeObject < WeatherForecast > (recmessage);
 
-        //Store data in Redis
-        db.StringSet("temperature", recmessage);
+        //Store weather data in Redis
+        db.StringSet("weather", recmessage);
         Console.WriteLine(" [!] Stored in Redis {0}", recmessage);
+
+        //Return in JSON
+        var recweather = JsonConvert.DeserializeObject < WeatherForecast > (recmessage);
         return recweather;
     }
 
@@ -128,6 +110,8 @@ public class WeatherForecastController : ControllerBase
             EndPoints = { { redisBinding["host"],  Int32.Parse(redisBinding["port"]) } },
             Password = redisBinding["password"]
         };
+
+        Console.WriteLine("Redis creds {0}", config.ToString());
 
         return ConnectionMultiplexer.Connect(config);
     }
