@@ -4,6 +4,7 @@ using RabbitMQ.Client.Events;
 using System.Text;
 using Newtonsoft.Json;
 using KubeServiceBinding;
+using StackExchange.Redis;
 
 namespace Sample.Controllers;
 
@@ -27,33 +28,36 @@ public class WeatherForecastController : ControllerBase
     public WeatherForecast Get()
     {
         //Parse RMQ configuration
-        DotnetServiceBinding sc = new DotnetServiceBinding();
-        Dictionary<string, string> rmqBinding = sc.GetBindings("rabbitmq");
+        // DotnetServiceBinding sc = new DotnetServiceBinding();
+        // // Dictionary<string, string> rmqBinding = sc.GetBindings("rabbitmq");
 
-        string host = rmqBinding["host"];
-        string port = rmqBinding["port"];
-        string user = rmqBinding["username"];
-        string password = rmqBinding["password"];
+        // Dictionary<string, string> redisBinding = sc.GetBindings("redis");
 
-        Console.WriteLine("host {0}", host);
-        Console.WriteLine("port {0}", port);
-        Console.WriteLine("user {0}", user);
+        // ConfigurationOptions config = new ConfigurationOptions
+        // {
+        //         EndPoints = { redisBinding["host"], redisBinding["port"] },
+        //         Password = redisBinding["password"]
+        // };
 
         //Setup RMQ client
-        ConnectionFactory factory = new ConnectionFactory();
-        factory.UserName = user;
-        factory.Password = password;
-        factory.HostName = host;
-        factory.Port = Int32.Parse(port);
+        // ConnectionFactory factory = new ConnectionFactory();
+        // factory.HostName = rmqBinding["host"];
+        // factory.UserName = rmqBinding["username"];
+        // factory.Password = rmqBinding["password"];
+        // factory.Port = Int32.Parse(rmqBinding["port"]);
 
-        IConnection conn = factory.CreateConnection();
+        // IConnection conn = factory.CreateConnection();
         
-        IModel channel = conn.CreateModel();
+        IModel channel = RabbitmqClient();
         channel.QueueDeclare(queue: "temperature",
                                 durable: false,
                                 exclusive: false,
                                 autoDelete: false,
                                 arguments: null);
+
+
+        var redisConn = RedisClient();
+        IDatabase db = redisConn.GetDatabase();
 
         //Generate Weather Data
         var weather = new WeatherForecast
@@ -85,6 +89,40 @@ public class WeatherForecastController : ControllerBase
 
         var recweather = JsonConvert.DeserializeObject < WeatherForecast > (recmessage);
 
+        //Store data in Redis
+        db.StringSet("temperature", recmessage);
+        Console.WriteLine(" [!] Stored in Redis {0}", recmessage);
         return recweather;
+    }
+
+
+    private IModel RabbitmqClient() {
+        DotnetServiceBinding sc = new DotnetServiceBinding();
+        Dictionary<string, string> rmqBinding = sc.GetBindings("rabbitmq");
+
+        //Setup RMQ client
+        ConnectionFactory factory = new ConnectionFactory();
+        factory.HostName = rmqBinding["host"];
+        factory.UserName = rmqBinding["username"];
+        factory.Password = rmqBinding["password"];
+        factory.Port = Int32.Parse(rmqBinding["port"]);
+
+        IConnection conn = factory.CreateConnection();
+        
+        return conn.CreateModel();
+    }
+
+
+    private ConnectionMultiplexer RedisClient() {
+        DotnetServiceBinding sc = new DotnetServiceBinding();
+        Dictionary<string, string> redisBinding = sc.GetBindings("redis");
+
+        ConfigurationOptions config = new ConfigurationOptions
+        {
+                EndPoints = { redisBinding["host"], redisBinding["port"] },
+                Password = redisBinding["password"]
+        };
+
+        return ConnectionMultiplexer.Connect(config.ToString());
     }
 }

@@ -14,7 +14,7 @@ spec:
     git:
       url: https://github.com/Samze/csharp-weatherforecast
       ref:
-        branch: binding_v2
+        branch: rmq_redis
   serviceClaims:
     - name: rmq
       ref:
