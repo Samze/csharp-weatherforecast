@@ -48,6 +48,9 @@ public class WeatherForecastController : ControllerBase
 
         // IConnection conn = factory.CreateConnection();
         
+        var redisConn = RedisClient();
+        IDatabase db = redisConn.GetDatabase();
+
         IModel channel = RabbitmqClient();
         channel.QueueDeclare(queue: "temperature",
                                 durable: false,
@@ -56,8 +59,6 @@ public class WeatherForecastController : ControllerBase
                                 arguments: null);
 
 
-        var redisConn = RedisClient();
-        IDatabase db = redisConn.GetDatabase();
 
         //Generate Weather Data
         var weather = new WeatherForecast
@@ -100,7 +101,6 @@ public class WeatherForecastController : ControllerBase
         DotnetServiceBinding sc = new DotnetServiceBinding();
         Dictionary<string, string> rmqBinding = sc.GetBindings("rabbitmq");
 
-        //Setup RMQ client
         ConnectionFactory factory = new ConnectionFactory();
         factory.HostName = rmqBinding["host"];
         factory.UserName = rmqBinding["username"];
@@ -119,10 +119,16 @@ public class WeatherForecastController : ControllerBase
 
         ConfigurationOptions config = new ConfigurationOptions
         {
-                EndPoints = { redisBinding["host"], redisBinding["port"] },
-                Password = redisBinding["password"]
+            AbortOnConnectFail = true,
+            Ssl = false, //WARNING UNSAFE
+            ConnectRetry = 3,
+            ConnectTimeout = 5000,
+            SyncTimeout = 5000,
+            DefaultDatabase = 0,
+            EndPoints = { { redisBinding["host"],  Int32.Parse(redisBinding["port"]) } },
+            Password = redisBinding["password"]
         };
 
-        return ConnectionMultiplexer.Connect(config.ToString());
+        return ConnectionMultiplexer.Connect(config);
     }
 }
