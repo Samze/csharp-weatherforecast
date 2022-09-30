@@ -8,7 +8,7 @@ metadata:
 spec:
   params:
   - name: annotations
-    value: |
+    value:
       autoscaling.knative.dev/minScale: "1"
   source:
     git:
@@ -18,6 +18,11 @@ spec:
   serviceClaims:
     - name: rmq
       ref:
-        apiVersion: rabbitmq.com/v1beta1
-        kind: RabbitmqCluster
-        name: hello-world
+        apiVersion: services.apps.tanzu.vmware.com/v1alpha1
+        kind: ResourceClaim
+        name: rmq-1-claim
+    - name: redis
+      ref:
+        apiVersion: services.apps.tanzu.vmware.com/v1alpha1
+        kind: ResourceClaim
+        name: redis-1-claim
