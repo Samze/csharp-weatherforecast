@@ -30,12 +30,12 @@ dotnet run
 kubectl create ns service-instances
 ```
 
-1. Install the Redis Enterprise operator
+2. Install the Redis Enterprise operator
 ```console
  kapp -y deploy --app redis-operator --file https://raw.githubusercontent.com/RedisLabs/redis-enterprise-k8s-docs/v6.2.10-45/bundle.yaml -n service-instances
 ```
 
-1. Install the RabbitMQ cluster Operator
+3. Install the RabbitMQ cluster Operator
 ```console
  kapp -y deploy --app rmq-operator --file https://github.com/rabbitmq/cluster-operator/releases/latest/download/cluster-operator.yml -n service-instances
  ```
@@ -47,12 +47,12 @@ kubectl create ns service-instances
 kubectl apply -f config/redis.yaml
  ```
 
-1. Create a RabbitMQ instance
+2. Create a RabbitMQ instance
 ```console
 kubectl apply -f config/rabbitmq.yaml
 ```
 
-1. Wait for both service instances to be ready
+3. Wait for both service instances to be ready
 ```console
 kubectl wait --for=condition=ReconcileSuccess RabbitmqCluster rmq-1 -n service-instances
 
@@ -73,7 +73,7 @@ kubectl apply -f config/meta.yaml
 kubectl apply -f config/claims.yaml
 ```
 
-1. Create workload
+2. Create workload
 ```console
 kubectl apply -f config/workload.yaml
 ```
@@ -84,13 +84,13 @@ kubectl apply -f config/workload.yaml
 tanzu service class list
 ```
 
-1. Discover what service instances are available in your namespace
+2. Discover what service instances are available in your namespace
 ```console
 tanzu service claimable list --class rabbitmq-cluster
 tanzu service claimable list --class redis-enterprise-cluster
 ```
 
-1. Create two ResourceClaims for each available Service
+3. Create two ResourceClaims for each available Service
 ```console
 tanzu service claim create rmq-1-claim \
   --resource-name rmq-1 \
@@ -107,7 +107,7 @@ tanzu service claim create redis-1-claim \
   --resource-api-version v1
 ```
 
-1. Create Workload
+4. Create Workload
 ```console
 tanzu apps workload create sample-app \
   --git-repo https://github.com/samze/csharp-weatherforecast \
