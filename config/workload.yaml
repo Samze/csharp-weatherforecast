@@ -10,22 +10,40 @@ spec:
     git:
       url: https://github.com/Samze/csharp-weatherforecast
       ref:
-        branch: binding
+        branch: rmq_redis_env_vars
   env:
-  - name: RMQ_PORT
-    value: "5672"
   - name: RMQ_HOST
     valueFrom:
       secretKeyRef:
-        name: hello-world-default-user
+        name: rmq-1-default-user
         key: host
+  - name: RMQ_PORT
+    valueFrom:
+      secretKeyRef:
+        name: rmq-1-default-user
+        key: port
   - name: RMQ_USER
     valueFrom:
       secretKeyRef:
-        name: hello-world-default-user
+        name: rmq-1-default-user
         key: username
   - name: RMQ_PASSWORD
     valueFrom:
       secretKeyRef:
-        name: hello-world-default-user
+        name: rmq-1-default-user
+        key: password
+  - name: REDIS_HOST
+    valueFrom:
+      secretKeyRef:
+        name: redis-1-redis-secret
+        key: host
+  - name: REDIS_PORT
+    valueFrom:
+      secretKeyRef:
+        name: redis-1-redis-secret
+        key: port
+  - name: REDIS_PASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: redis-1-redis-secret
         key: password

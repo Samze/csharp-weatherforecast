@@ -1,0 +1,93 @@
+---
+apiVersion: services.apps.tanzu.vmware.com/v1alpha1
+kind: ClusterInstanceClass
+metadata:
+  name: rabbitmq-cluster
+spec:
+  description:
+    short: Rabbitmq clusters provided by the Tanzu Rabbitmq Operator
+  pool:
+    group: rabbitmq.com
+    kind: RabbitmqCluster
+
+---
+apiVersion: services.apps.tanzu.vmware.com/v1alpha1
+kind: ClusterInstanceClass
+metadata:
+  name: redis-enterprise-cluster
+spec:
+  description:
+    short: Redis Enterprise Cluster
+  pool:
+    kind: Secret
+    labelSelector:
+      matchLabels:
+        services.apps.tanzu.vmware.com/class: redis-enterprise-cluster
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: service-binding-rmq-role
+  labels:
+    servicebinding.io/controller: "true"
+rules:
+- apiGroups:
+  - "rabbitmq.com"
+  resources:
+  - rabbitmqclusters
+  verbs:
+  - get
+  - list
+  - watch
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: redis-secret-reader
+  labels:
+    servicebinding.io/controller: "true"
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - secrets
+  verbs:
+  - get
+  - list
+  - watch
+
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: service-instances
+
+---
+apiVersion: services.apps.tanzu.vmware.com/v1alpha1
+kind: ResourceClaimPolicy
+metadata:
+  name: rmq-policy
+  namespace: service-instances
+spec:
+  consumingNamespaces:
+  - "*"
+  subject:
+    group: rabbitmq.com
+    kind: RabbitmqCluster
+---
+apiVersion: services.apps.tanzu.vmware.com/v1alpha1
+kind: ResourceClaimPolicy
+metadata:
+  name: redis-policy
+  namespace: service-instances
+spec:
+  consumingNamespaces:
+  - "*"
+  subject:
+    group: ""
+    kind: Secret
+    selector:
+      matchLabels:
+        services.apps.tanzu.vmware.com/class: redis-enterprise-cluster

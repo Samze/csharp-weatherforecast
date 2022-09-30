@@ -1,0 +1,16 @@
+
+---
+apiVersion: rabbitmq.com/v1beta1
+kind: RabbitmqCluster
+metadata:
+  name: rmq-1
+  namespace: service-instances
+spec:
+  replicas: 1
+  resources:
+    limits:
+      cpu: "500m"
+      memory: 2Gi
+    requests:
+      cpu: "250m"
+      memory: 2Gi
