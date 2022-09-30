@@ -19,6 +19,6 @@ spec:
   ref:
     apiVersion: v1
     kind: Secret
-    name: redis-test-redis-secret
+    name: redis-1-redis-secret
     namespace: service-instances
 

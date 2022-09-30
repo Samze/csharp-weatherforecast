@@ -26,6 +26,8 @@ metadata:
   namespace: service-instances
 spec:
   memorySize: 1GB
+  redisEnterpriseCluster:
+    name: redis-1
 ---
 apiVersion: v1
 kind: ServiceAccount
@@ -88,7 +90,7 @@ spec:
      app.kubernetes.io/instance: redis-1
      services.apps.tanzu.vmware.com/class: redis-enterprise-cluster
   stringData:
-    host: "$(.redis-service.metadata.name).$(.redis-service.metadata.namespace)"
+    host: "$(.redis-service.metadata.name).$(.redis-service.metadata.namespace).svc.cluster.local"
     provider: redis_enterprise
     type: redis
   data:
