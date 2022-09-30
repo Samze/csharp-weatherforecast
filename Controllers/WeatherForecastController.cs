@@ -111,8 +111,6 @@ public class WeatherForecastController : ControllerBase
             Password = redisBinding["password"]
         };
 
-        Console.WriteLine("Redis creds {0}", config.ToString());
-
         return ConnectionMultiplexer.Connect(config);
     }
 }
